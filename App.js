@@ -1,45 +1,76 @@
 import React from 'react';
 import { StyleSheet, Text, View, SafeAreaView, StatusBar, Platform, Button } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import CreateEvent from "./components/createEvent/CreateEvent";
-import UserFlow from "./components/userflow/UserFlow";
-import Home from './components/home/Home';
-import UserProfile from './components/profile/UserProfile';
-import Massege from './components/messege/Massege';
+import { useEffect, useState } from 'react';
+import axios from "axios";
+import Navbar from './components/navigaiton/Navbar';
+
+// import CreateEvent from "./components/createEvent/CreateEvent";
+// import UserFlow from "./components/userflow/UserFlow";
+// import UserProfile from './components/profile/UserProfile';
+// import Massege from './components/messege/Massege';
 import Signin from './components/signIn/SignIn';
+// import UserFlow from "./components/userflow/UserFlow";
+// import CreateEvent from "./components/createEvent/CreateEvent";
+import UserContext from './components/UserContext';
+import RegisterUser from './components/signIn/RegisterUser';
+import {
+  BrowserRouter as Router,
+  Routes, 
+  Route,
+  Link
+} from "react-router-dom";
+import SignInPage from './components/signIn/SignInPage';
 
 
-const Stack = createNativeStackNavigator();
 
 function App() {
+
+  const [username, setUsername] = useState();
+    const [newUser, setNewUser] = useState(false);
+
+    useEffect(() => {
+        axios
+            .get('https://localhost:3000/islogedin', {
+                // withCredentials: true,
+            })
+            .then((res) => {
+                setUsername(res.data.username);
+            });
+    }, []);
+
+    const logOut = () => {
+      console.log("Loggat ut");
+        // axios
+        //     .post(
+        //         'https://cook-and-friends.herokuapp.com/user/logout',
+        //         {},
+        //         { withCredentials: true }
+        //     )
+        //     .then(() => {
+        //         setUsername();
+        //     });
+    };
+
   return (
-    <>
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Signin">
-        <Stack.Screen name="Signin" component={Signin}/>
-
-        <Stack.Screen name="Home" component={Home}/>
-        <Stack.Screen name="Flow" component={UserFlow} />
-        <Stack.Screen name="Profile" component={UserProfile} />
-        <Stack.Screen name="Create" component={CreateEvent} />
-        <Stack.Screen name="Msg" component={Massege} />
-      </Stack.Navigator>
-    </NavigationContainer>
-
-
-
-  </>
+    <UserContext.Provider value={{ username: username, setUsername }}>
+    {username !== undefined ? (
+        <View>
+            <View>
+                <Button 
+                title="Logga ut"
+                onPress={logOut}/>               
+                <Text>
+                    Hej, {username}
+                </Text>
+            </View>
+            <Navbar user={username} />
+        </View>
+    ) : (
+        <SignInPage/>
+    )}
+</UserContext.Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-
-    },
-});
 
 export default App;
