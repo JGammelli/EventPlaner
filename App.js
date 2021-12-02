@@ -1,45 +1,82 @@
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, StatusBar, Platform, Button } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import CreateEvent from "./components/createEvent/CreateEvent";
-import UserFlow from "./components/userflow/UserFlow";
-import Home from './components/home/Home';
-import UserProfile from './components/profile/UserProfile';
-import Massege from './components/messege/Massege';
-import Signin from './components/signIn/SignIn';
+import { useEffect, useState } from 'react';
+import Navbar from './components/navigation/Navbar';
+import UserContext from './components/UserContext';
+import SignInPage from './components/signIn/SignInPage';
+import axios from 'axios';
+import { Text, View, Button, PushNotificationIOS } from 'react-native';
 
 
-const Stack = createNativeStackNavigator();
+import APIKit, {setClientToken} from './components/APIKit';
+
 
 function App() {
-  return (
-    <>
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Signin">
-        <Stack.Screen name="Signin" component={Signin}/>
+    axios.defaults.withCredentials = true;
 
-        <Stack.Screen name="Home" component={Home}/>
-        <Stack.Screen name="Flow" component={UserFlow} />
-        <Stack.Screen name="Profile" component={UserProfile} />
-        <Stack.Screen name="Create" component={CreateEvent} />
-        <Stack.Screen name="Msg" component={Massege} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    const [username, setUsername] = useState();
+    const [newUser, setNewUser] = useState(false);
+    useEffect(() => {
+        console.log("checks loggin");
+        
+        
+        fetch("http://localhost:3000/islogedin", {
+            method: "POST",
+            origin: "http://localhost:19006",
 
+            credentials: 'include',
+            headers:{
+                "Content-Type": "application/json",
+                'Access-Control-Allow-Origin': "http://localhost:19006"
+            }
+        })
+        .then((res) => {
+            setUsername(res.username);
+        });
+        
+        // APIKit
+        // .get('http://localhost:3000/islogedin', {
+            
+        // })
+        // .then((res) => {
+        //     setUsername(res.data.username);
+        // });
 
+    }, []);
 
-  </>
-  );
+    const logOut = () => {
+      console.log("Loggat ut");
+        // axios
+        //     .post(
+        //         'https://localhost:3000/logout',
+        //         {},
+        //         { withCredentials: true }
+        //     )
+        //     .then(() => {
+        //         setUsername();
+        //     });
+    };
+    return (
+        <UserContext.Provider value={{ username: username, setUsername }}>
+        {username !== undefined ? (
+            <View>
+                <View>
+                    <Button 
+                    title="Logga ut"
+                    onPress={logOut}/>               
+                    <Text>
+                        Hej, {username}
+                    </Text>
+                </View>
+                <Navbar user={username} />
+            </View>
+        ) : (
+            <SignInPage/>
+        )}
+        </UserContext.Provider>
+    );
+    
+  
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-
-    },
-});
 
 export default App;
